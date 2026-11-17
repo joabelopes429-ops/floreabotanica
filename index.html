@@ -59,9 +59,9 @@ section{padding:34px 0}
 .cat{font-size:.7rem;text-transform:uppercase;letter-spacing:.08em;color:var(--verde-esc);font-weight:700}
 .info h3{font-size:1.2rem}
 .desc{font-size:.85rem;color:var(--suave);flex:1;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
-.linha{display:flex;align-items:center;justify-content:space-between;margin-top:8px;gap:8px}
+.linha{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-top:8px;gap:8px}
 .preco{font-weight:800;color:var(--grafite)}
-.add{background:var(--verde);color:#fff;border-radius:999px;padding:8px 14px;font-weight:700;font-size:.85rem}
+.add{background:var(--verde);color:#fff;border-radius:999px;padding:8px 14px;font-weight:700;font-size:.85rem;white-space:nowrap}
 .add:active{transform:scale(.96)}
 .vazio,.erro{text-align:center;color:var(--suave);padding:30px 0}
 
@@ -231,7 +231,7 @@ const CONFIG = {
   planilhaCsv: "https://docs.google.com/spreadsheets/d/1-n0ndJoO5YSAVRk9d1JeVgqEEKaRb4TpkqG1ND4sZu4/gviz/tq?tqx=out:csv&headers=1",
 
   // Caminho da logo (ex.: "logo.png"). Vazio = usa o monograma desenhado.
-  logo: "",
+  logo: "logo.png",
 
   pagamentos: ["Pix", "Dinheiro"],
   pix: { chave: "219.006.337-01", tipo: "CPF", titular: "Ana Luiza Cravinho Mello" },
@@ -266,7 +266,14 @@ let produtos = [], carrinho = [], categoriaAtiva = "Todos";
 function iniciarPagina(){
   document.querySelectorAll("[data-nome]").forEach(e=>e.textContent=CONFIG.nome);
   document.querySelectorAll("[data-logo]").forEach(e=>{
-    e.innerHTML = CONFIG.logo ? `<img src="${esc(CONFIG.logo)}" alt="Logo ${esc(CONFIG.nome)}" style="width:100%;height:100%;object-fit:cover">` : LOGO_SVG;
+    e.innerHTML = LOGO_SVG;
+    if(CONFIG.logo){
+      const img=new Image();
+      img.alt="Logo "+CONFIG.nome;
+      img.style.cssText="width:100%;height:100%;object-fit:cover";
+      img.onload=()=>{e.innerHTML="";e.appendChild(img);};
+      img.src=fotoUrl(CONFIG.logo);
+    }
   });
   $("#slogan").textContent = CONFIG.slogan;
   $("#prazo").textContent = CONFIG.entrega;
@@ -361,7 +368,7 @@ function desenharGrade(){
   $("#vazio").classList.toggle("oculto", lista.length>0 || !$("#erro").classList.contains("oculto"));
   $("#grade").innerHTML=lista.map(p=>{
     const i=produtos.indexOf(p);
-    const foto=p.foto?`<img src="${esc(p.foto)}" alt="${esc(p.nome)}" loading="lazy" onerror="this.replaceWith(Object.assign(document.createElement('div'),{innerHTML:'${FOLHA_SVG.replace(/'/g,"\\'")}'}).firstChild)">`:FOLHA_SVG;
+    const foto=p.foto?`<img src="${esc(p.foto)}" alt="${esc(p.nome)}" loading="lazy">`:FOLHA_SVG;
     return `<article class="card">
       <div class="foto">${foto}</div>
       <div class="info">
@@ -371,6 +378,7 @@ function desenharGrade(){
         <div class="linha"><span class="preco">${brl(p.preco)}</span><button class="add" data-i="${i}">Adicionar</button></div>
       </div></article>`;
   }).join("");
+  document.querySelectorAll(".foto img").forEach(im=>im.addEventListener("error",()=>{im.parentElement.innerHTML=FOLHA_SVG;}));
   document.querySelectorAll(".add").forEach(b=>b.onclick=()=>adicionar(+b.dataset.i,b));
 }
 
